@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Typing Speed Test — Glassmorphism UI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-1: #071029;
+    --bg-2: #071834;
+    --glass: rgba(255,255,255,0.06);
+    --glass-2: rgba(255,255,255,0.03);
+    --accent: #60a5fa;      /* soft sky blue */
+    --accent-2: #7c3aed;    /* purple */
+    --neon: rgba(96,165,250,0.18);
+    --muted: #9fb0c8;
+    --success: #34d399;
+    --danger: #fb7185;
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:28px;
+    background: radial-gradient(1200px 600px at 10% 10%, rgba(124,58,237,0.08), transparent),
+                radial-gradient(900px 400px at 90% 90%, rgba(96,165,250,0.06), transparent),
+                linear-gradient(180deg,var(--bg-1),var(--bg-2));
+    color: #e6f0fb;
+  }
+
+  /* Main card */
+  .card {
+    width: min(980px, 96%);
+    max-width: 980px;
+    border-radius: 16px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 20px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+    border: 1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 8px 40px rgba(2,8,23,0.6), 0 0 40px rgba(124,58,237,0.03) inset;
+    backdrop-filter: blur(8px) saturate(120%);
+  }
+
+  /* Neon outline */
+  .card::after{
+    content:"";
+    position:absolute;
+    inset:1px;
+    border-radius:16px;
+    pointer-events:none;
+    background: linear-gradient(90deg, rgba(124,58,237,0.08), rgba(96,165,250,0.06));
+    mask: linear-gradient(#000,#000) content-box, linear-gradient(#000,#000);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    padding: 1px;
+  }
+
+  header{
+    grid-column: 1 / -1;
+    display:flex;
+    gap:16px;
+    align-items:center;
+    justify-content:space-between;
+  }
+
+  .title {
+    display:flex;
+    gap:12px;
+    align-items:center;
+  }
+  .logo {
+    width:48px;
+    height:48px;
+    border-radius:10px;
+    background: linear-gradient(135deg,var(--accent),var(--accent-2));
+    display:grid;
+    place-items:center;
+    font-weight:800;
+    color:rgba(2,6,23,0.98);
+    box-shadow: 0 6px 20px rgba(96,165,250,0.12);
+  }
+  h1{font-size:20px;margin:0}
+  p.lead{margin:0;color:var(--muted);font-size:13px}
+
+  /* left column */
+  .left {
+    padding: 8px 6px 6px 6px;
+  }
+
+  .text-box {
+    background: linear-gradient(180deg, rgba(255,255,255,0.012), rgba(255,255,255,0.006));
+    border-radius:12px;
+    padding:18px;
+    min-height:170px;
+    line-height:1.7;
+    font-size:18px;
+    color: #e8f2ff;
+    box-shadow: inset 0 -10px 40px rgba(2,8,23,0.35);
+    overflow:hidden;
+    position:relative;
+  }
+
+  /* text spans */
+  .text-box span { white-space:pre-wrap; }
+  .text-box .correct { color: var(--success); }
+  .text-box .incorrect { color: var(--danger); text-decoration: underline; }
+
+  /* typing area */
+  .typing-area {
+    margin-top:14px;
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+  }
+
+  textarea#input {
+    flex:1;
+    min-height:110px;
+    max-height:200px;
+    resize:none;
+    padding:14px 16px;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,0.04);
+    background: rgba(255,255,255,0.015);
+    color: #e6f0fb;
+    outline:none;
+    font-size:16px;
+    box-shadow: 0 6px 24px rgba(2,8,23,0.35);
+  }
+
+  /* right column (stats) */
+  .right {
+    padding: 6px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  .stats-card {
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    padding:14px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,0.04);
+  }
+
+  .stat-row {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    padding:8px 0;
+  }
+
+  .stat {
+    font-size:26px;
+    font-weight:700;
+  }
+  .label { color: var(--muted); font-size:13px; }
+
+  .controls {
+    display:flex;
+    gap:8px;
+    align-items:center;
+    margin-top:6px;
+  }
+
+  .btn {
+    background: linear-gradient(90deg,var(--accent),var(--accent-2));
+    border:none;
+    color:#041025;
+    padding:10px 12px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:700;
+    box-shadow: 0 8px 30px rgba(96,165,250,0.12);
+  }
+  .btn.ghost {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.06);
+    color: var(--muted);
+    font-weight:600;
+  }
+
+  /* progress */
+  .progress {
+    height:10px;
+    width:100%;
+    background: rgba(255,255,255,0.03);
+    border-radius:999px;
+    overflow:hidden;
+    margin-top:8px;
+    border:1px solid rgba(255,255,255,0.02);
+  }
+  .progress > i {
+    display:block;
+    height:100%;
+    width:0%;
+    background: linear-gradient(90deg,var(--accent),var(--accent-2));
+    box-shadow:0 6px 20px rgba(124,58,237,0.08);
+    transition: width 300ms linear;
+  }
+
+  /* time selector */
+  .time-select {
+    display:flex;
+    gap:8px;
+  }
+  .time-select button {
+    padding:8px 10px;
+    border-radius:8px;
+    background:transparent;
+    color:var(--muted);
+    border:1px solid rgba(255,255,255,0.03);
+    cursor:pointer;
+    font-weight:600;
+  }
+  .time-select button.active {
+    background: rgba(96,165,250,0.08);
+    color: white;
+    border-color: rgba(96,165,250,0.18);
+  }
+
+  /* leaderboard */
+  .leader {
+    margin-top:8px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    font-size:14px;
+    color:var(--muted);
+  }
+  .leader .row { display:flex; justify-content:space-between; gap:8px; }
+
+  footer.note {
+    grid-column: 1 / -1;
+    text-align:center;
+    color:var(--muted);
+    font-size:13px;
+    margin-top:10px;
+  }
+
+  /* responsive */
+  @media (max-width:880px){
+    .card { grid-template-columns: 1fr; }
+    .right { order: 2; }
+    header { flex-direction:column; align-items:flex-start; gap:8px; }
+  }
+
+</style>
+</head>
+<body>
+  <main class="card" role="main" aria-labelledby="title">
+    <header>
+      <div class="title">
+        <div class="logo">TS</div>
+        <div>
+          <h1 id="title">Typing Speed Test</h1>
+          <p class="lead">Glassmorphic UI · Practice & measure your typing speed</p>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center;">
+        <div class="time-select" role="tablist" aria-label="Test duration">
+          <button data-time="30">30s</button>
+          <button data-time="60" class="active">60s</button>
+          <button data-time="120">120s</button>
+        </div>
+        <button id="restart" class="btn ghost" title="Restart test">Restart</button>
+      </div>
+    </header>
+
+    <!-- left -->
+    <section class="left">
+      <div class="text-box" id="textBox" aria-live="polite" aria-atomic="true"></div>
+
+      <div class="typing-area" style="margin-bottom:6px;">
+        <textarea id="input" placeholder="Start typing here..." aria-label="Typing input"></textarea>
+      </div>
+
+      <div style="display:flex;gap:12px;align-items:center;justify-content:space-between;">
+        <div style="display:flex;gap:8px;flex-direction:column;">
+          <div class="label">Progress</div>
+          <div class="progress" title="Progress">
+            <i id="progressBar"></i>
+          </div>
+        </div>
+
+        <div style="text-align:right;">
+          <div class="label">Time left</div>
+          <div style="font-weight:800;font-size:20px;" id="timeLeft">60s</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- right -->
+    <aside class="right" aria-label="Statistics">
+      <div class="stats-card">
+        <div class="stat-row">
+          <div>
+            <div class="label">WPM</div>
+            <div class="stat" id="wpm">0</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="label">CPM</div>
+            <div class="stat" id="cpm">0</div>
+          </div>
+        </div>
+
+        <div class="stat-row" style="padding-top:6px;">
+          <div>
+            <div class="label">Accuracy</div>
+            <div class="stat" id="accuracy">0%</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="label">Typed</div>
+            <div class="stat" id="typedCount">0</div>
+          </div>
+        </div>
+
+        <div style="height:8px"></div>
+
+        <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;">
+          <div class="label">Controls</div>
+          <div class="controls">
+            <button id="pauseBtn" class="btn ghost">Pause</button>
+            <button id="finishBtn" class="btn">Finish</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-card" aria-label="Leaderboard">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="label">Local Leaderboard</div>
+          <div style="font-weight:700;color:var(--accent)">Best</div>
+        </div>
+
+        <div class="leader" id="leaderboard">
+          <div class="row"><span class="label">—</span><span class="label">—</span></div>
+        </div>
+
+        <div style="margin-top:10px;display:flex;gap:8px;">
+          <input id="nameInput" placeholder="Your name" style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit" />
+          <button id="saveBtn" class="btn">Save</button>
+        </div>
+      </div>
+
+      <div class="stats-card" style="text-align:center;color:var(--muted);font-size:13px;">
+        Tip: Start typing to begin the timer. Hover the text area to pause auto-focus.
+      </div>
+    </aside>
+
+    <footer class="note">Made with ❤️ · Glassmorphic Typing Speed Test — Offline (no API)</footer>
+  </main>
+
+<script>
+  // ---------- CONFIG ----------
+  const paragraphs = [
+    "Practice makes perfect. Typing speed improves with focused daily practice — aim for accuracy first, then speed.",
+    "JavaScript enables you to build interactive web pages. Practising typing helps when coding faster and debugging smarter.",
+    "A calm mind and consistent practice lead to better typing rhythm. Try short, regular sessions to build muscle memory.",
+    "Focus on accuracy. Speed will naturally follow. Break longer texts into small chunks and type them repeatedly.",
+    "Use correct posture: feet flat, wrists straight, and eyes on the screen. Proper ergonomics prevent fatigue and increase speed."
+  ];
+  // ----------------------------
+
+  // DOM
+  const textBox = document.getElementById('textBox');
+  const input = document.getElementById('input');
+  const timeLeftEl = document.getElementById('timeLeft');
+  const wpmEl = document.getElementById('wpm');
+  const cpmEl = document.getElementById('cpm');
+  const accuracyEl = document.getElementById('accuracy');
+  const typedCountEl = document.getElementById('typedCount');
+  const progressBar = document.getElementById('progressBar');
+  const timeButtons = document.querySelectorAll('.time-select button');
+  const restartBtn = document.getElementById('restart');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const finishBtn = document.getElementById('finishBtn');
+  const leaderboardEl = document.getElementById('leaderboard');
+  const saveBtn = document.getElementById('saveBtn');
+  const nameInput = document.getElementById('nameInput');
+
+  // state
+  let duration = 60;
+  let timeLeft = duration;
+  let timer = null;
+  let started = false;
+  let finished = false;
+  let current = '';
+  let charIndex = 0;
+  let correctChars = 0;
+  let incorrectChars = 0;
+  let totalTyped = 0;
+  let isPaused = false;
+
+  // utils
+  function pickParagraph(){
+    current = paragraphs[Math.floor(Math.random()*paragraphs.length)];
+    renderText();
+  }
+
+  function renderText(){
+    textBox.innerHTML = '';
+    // create spans for each char
+    for (const ch of current.split('')){
+      const s = document.createElement('span');
+      s.innerText = ch;
+      textBox.appendChild(s);
+    }
+  }
+
+  function resetState(){
+    clearInterval(timer);
+    started = false;
+    finished = false;
+    timeLeft = duration;
+    charIndex = 0;
+    correctChars = 0;
+    incorrectChars = 0;
+    totalTyped = 0;
+    isPaused = false;
+    input.disabled = false;
+    input.value = '';
+    updateUI();
+    pickParagraph();
+  }
+
+  function startTimerIfNeeded(){
+    if (!started && input.value.length > 0 && !finished){
+      started = true;
+      timer = setInterval(()=> {
+        if (!isPaused){
+          timeLeft--;
+          updateUI();
+          if (timeLeft <= 0){
+            finishTest();
+          }
+        }
+      }, 1000);
+    }
+  }
+
+  function finishTest(){
+    finished = true;
+    clearInterval(timer);
+    input.disabled = true;
+    updateUI();
+    // update leaderboard best entry if exists
+  }
+
+  function calculateStats(){
+    // count correct / incorrect by comparing typed string char-by-char
+    const typed = input.value;
+    const spans = textBox.querySelectorAll('span');
+    correctChars = 0;
+    incorrectChars = 0;
+    totalTyped = typed.length;
+
+    for (let i=0;i<spans.length;i++){
+      const ch = typed[i];
+      spans[i].classList.remove('correct','incorrect');
+      if (ch == null){
+        // not typed yet
+      } else if (ch === spans[i].innerText){
+        spans[i].classList.add('correct');
+        correctChars++;
+      } else {
+        spans[i].classList.add('incorrect');
+        incorrectChars++;
+      }
+    }
+
+    // WPM: words based on 5 chars
+    const timeElapsed = (duration - timeLeft) || 1;
+    const wpm = Math.round((correctChars / 5) / (timeElapsed/60));
+    const cpm = Math.round((correctChars) / (timeElapsed/60));
+    const accuracy = totalTyped === 0 ? 0 : Math.round((correctChars / totalTyped) * 100);
+
+    wpmEl.innerText = isFinite(wpm) ? wpm : 0;
+    cpmEl.innerText = isFinite(cpm) ? cpm : 0;
+    accuracyEl.innerText = accuracy + '%';
+    typedCountEl.innerText = totalTyped;
+
+    // progress
+    const progressPct = Math.min(100, Math.round((timeElapsed / duration)*100));
+    progressBar.style.width = progressPct + '%';
+  }
+
+  function updateUI(){
+    timeLeftEl.innerText = timeLeft + 's';
+    calculateStats();
+    // when finished show final progress 100
+    if (finished) progressBar.style.width = '100%';
+  }
+
+  // time buttons
+  timeButtons.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      timeButtons.forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      duration = Number(btn.dataset.time);
+      resetState();
+    });
+  });
+
+  // input events
+  input.addEventListener('input', ()=>{
+    if (finished) return;
+    startTimerIfNeeded();
+    calculateStats();
+  });
+
+  input.addEventListener('keydown', (e)=>{
+    // handle finish early if user presses Enter + Ctrl
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)){
+      finishTest();
+    }
+  });
+
+  // pause / resume
+  pauseBtn.addEventListener('click', ()=>{
+    if (finished) return;
+    isPaused = !isPaused;
+    pauseBtn.textContent = isPaused ? 'Resume' : 'Pause';
+    if (!isPaused) input.focus();
+  });
+
+  // restart
+  restartBtn.addEventListener('click', ()=> resetState());
+
+  // finish button
+  finishBtn.addEventListener('click', ()=> finishTest());
+
+  // keyboard focus convenience
+  input.addEventListener('mouseenter', ()=> input.blur());
+  input.addEventListener('mouseleave', ()=> input.focus());
+
+  // leaderboard (localStorage)
+  const STORAGE_KEY = 'ts_best_scores_v1';
+  function loadLeaderboard(){
+    const raw = localStorage.getItem(STORAGE_KEY);
+    let arr = [];
+    if (raw) {
+      try { arr = JSON.parse(raw) } catch(e){ arr = []; }
+    }
+    return arr;
+  }
+  function saveLeaderboard(arr){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr.slice(0,10)));
+    renderLeaderboard();
+  }
+  function addScore(name, wpm){
+    const arr = loadLeaderboard();
+    arr.push({name: name || 'Anonymous', wpm: Number(wpm), date: (new Date()).toISOString()});
+    arr.sort((a,b)=> b.wpm - a.wpm);
+    saveLeaderboard(arr);
+  }
+  function renderLeaderboard(){
+    const arr = loadLeaderboard();
+    leaderboardEl.innerHTML = '';
+    if (arr.length === 0){
+      leaderboardEl.innerHTML = '<div class="row"><span class="label">No scores yet</span><span class="label">—</span></div>';
+      return;
+    }
+    for (let i=0;i<Math.min(5,arr.length);i++){
+      const r = arr[i];
+      const row = document.createElement('div');
+      row.className = 'row';
+      row.innerHTML = `<span style="font-weight:700">${i+1}. ${escapeHtml(r.name)}</span><span style="font-weight:700;color:var(--accent)">${r.wpm} WPM</span>`;
+      leaderboardEl.appendChild(row);
+    }
+  }
+
+  saveBtn.addEventListener('click', ()=>{
+    const name = nameInput.value.trim() || 'Anonymous';
+    const wpm = Number(wpmEl.innerText) || 0;
+    if (wpm === 0){
+      alert('No score to save yet.');
+      return;
+    }
+    addScore(name, wpm);
+    nameInput.value = '';
+    renderLeaderboard();
+  });
+
+  function escapeHtml(s){
+    return s.replace(/[&<>"']/g, (m)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  // init
+  (function init(){
+    pickParagraph();
+    renderLeaderboard();
+    updateUI();
+    // quick autofocus
+    setTimeout(()=> input.focus(), 350);
+  })();
+
+  // ensure UI updates when time changes even if input not changing
+  setInterval(()=> { if (started && !isPaused && !finished) updateUI(); }, 800);
+
+</script>
+</body>
+</html>
